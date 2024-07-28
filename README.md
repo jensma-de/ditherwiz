@@ -11,3 +11,8 @@ To try out the tool directly in your browser, visit https://jensma-de.github.io/
 ![Example 3](examples/3.png)
 ![Example 4](examples/4.png)
 ![Example 5](examples/5.png)
+
+## disclaimer
+
+not optimized for mobile browsers. like, in no way. 0%.
+
