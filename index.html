@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Processing</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            color: #E0E0E0;
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        #left-panel {
+            display: flex;
+            flex-direction: column;
+            width: 300px;
+            border-right: 2px solid #333;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            background-color: #000;
+        }
+        #upload-button {
+            background-color: #6200EE;
+            border: none;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        #uploaded-image {
+            margin-bottom: 20px;
+        }
+        #uploaded-image img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        #settings {
+            flex: 1;
+            margin-top: 20px;
+        }
+        .palette-button {
+            display: flex;
+            align-items: center;
+            background-color: #333;
+            border: 1px solid #555;
+            border-radius: 5px;
+            padding: 5px;
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+        .palette-button:hover {
+            background-color: #444;
+        }
+        .custom-palette-button {
+            display: flex;
+            align-items: center;
+            background-color: #333;
+            border: 1px solid #555;
+            border-radius: 5px;
+            padding: 5px;
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+        .custom-palette-button:hover {
+            background-color: #444;
+        }
+        #right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: hidden;
+            justify-content: center;
+            align-items: center;
+            background-color: #121212;
+        }
+        #output-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #333;
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: #1E1E1E;
+        }
+        #output-area img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+        }
+        #placeholder-image, #processed-image {
+            position: absolute;
+        }
+        #placeholder-image {
+            opacity: 1;
+        }
+        #processed-image {
+            opacity: 0;
+        }
+        #palette-display {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #444;
+            padding: 5px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .palette-color {
+            width: 20px;
+            height: 20px;
+            margin: 2px;
+        }
+        #zoom-slider {
+            width: 80%;
+            margin-top: 20px;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background: #444;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        #github-link {
+            color: #6200EE;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        #github-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="left-panel">
+            <img id="logo" src="data:image/png;base64,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">
+            
+            <button id="upload-button">Upload Image</button>
+            <div id="uploaded-image"></div>
+            <input type="file" id="fileElem" accept="image/*" style="display: none;">
+            <div id="settings">
+                <label>Palette:</label><br>
+                <div id="palette-options">
+                    <div class="palette-button" data-palette="monochrome"> Monochrome </div>
+                    <div class="palette-button" data-palette="grayscale1"> Grayscale (3 colors) </div>
+                    <div class="palette-button" data-palette="grayscale2"> Grayscale (4 colors) </div>
+                    <div class="palette-button" data-palette="eightColors"> Primary Colors </div>
+                    <div class="palette-button" data-palette="pc98"> PC-98 </div>
+                    <div class="palette-button" data-palette="gameboy"> Game Boy </div>
+                    <div class="palette-button" data-palette="ega"> EGA </div>
+                    <div class="palette-button" data-palette="cga"> CGA </div>
+                    <div class="palette-button" data-palette="c64"> C64 </div>
+                    <div class="palette-button" data-palette="vaporwave"> Bubble Gum </div>
+                    <div class="palette-button" data-palette="sunset"> Sunset </div>
+                    <div class="palette-button" data-palette="apple2"> Apple II </div>
+                    <div class="palette-button" data-palette="zxSpectrum"> ZX Spectrum </div>
+                    <div class="custom-palette-button" id="custom-palette-button"> Custom Palette </div>
+                </div>
+                <br>
+                <label for="invert">Invert:</label>
+                <input type="checkbox" id="invert"><br><br>
+
+                <label for="blockiness">Blockiness: </label>
+                <input type="range" id="blockiness" min="0" max="9" step="1" value="0"><br><br>
+
+                <label>Dithering Method:</label><br>
+                <div id="dithering-options">
+                    <input type="radio" name="dithering" value="0" checked> Bayer Order 0<br>
+                    <input type="radio" name="dithering" value="1"> Bayer Order 1<br>
+                    <input type="radio" name="dithering" value="2"> Bayer Order 2<br>
+                    <input type="radio" name="dithering" value="3"> Bayer Order 3<br>
+                    <input type="radio" name="dithering" value="pc98"> PC-98 Dithering<br>
+                    <input type="radio" name="dithering" value="newMethod"> Flat<br>
+                    <input type="radio" name="dithering" value="mildMethod"> Diagonal<br>
+                    <input type="radio" name="dithering" value="glitch"> Noise<br>
+                </div><br>
+
+                <label for="brightness">Brightness: </label>
+                <input type="range" id="brightness" min="-100" max="100" value="0"><br><br>
+
+                <label for="contrast">Contrast: </label>
+                <input type="range" id="contrast" min="-100" max="100" value="0"><br><br>
+
+                <label for="gamma">Gamma: </label>
+                <input type="range" id="gamma" min="0.1" max="3" step="0.1" value="1">
+                <hr>
+                <a id="github-link" href="https://github.com/jensma-de/ditherwiz" target="_blank">GitHub - DitherWiz</a>
+            </div>
+        </div>
+        <div id="right-panel">
+            <div id="output-area">
+                <div id="placeholder-image" class="output-img"></div>
+                <div id="processed-image" class="clickable output-img" onclick="downloadImage()"></div>
+                <div id="palette-display"></div>
+            </div>
+            <input type="range" id="zoom-slider" min="1" max="3" step="0.1" value="1">
+        </div>
+    </div>
+
+    <script>
+        let uploadedImage = null;
+        let selectedPalette = [];
+        let customPalette = [];
+        const zoomSlider = document.getElementById('zoom-slider');
+        const processedImageDiv = document.getElementById('processed-image');
+        const placeholderImage = document.getElementById('placeholder-image');
+
+        const palettes = {
+            monochrome: ['#000000', '#FFFFFF'],
+            grayscale1: ['#000000', '#808080', '#FFFFFF'],
+            grayscale2: ['#000000', '#C0C0C0', '#808080', '#404040', '#FFFFFF'],
+            eightColors: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#000000', '#FFFFFF'],
+            pc98: ['#000000', '#555555', '#AAAAAA', '#FFFFFF', '#FF5555', '#FFAAAA', '#AAFFAA', '#55FF55'],
+            gameboy: ['#1F1F1F', '#5B505C', '#A4942C', '#D4D78C'],
+            ega: ['#000000', '#0000AA', '#00AA00', '#00AAAA', '#AA0000', '#AA00AA', '#AA5500', '#AAAAAA', '#555555', '#5555FF', '#55FF55', '#55FFFF', '#FF5555', '#FF55FF', '#FFFF55', '#FFFFFF'],
+            cga: ['#000000', '#00AAAA', '#AA00AA', '#AAAAAA'],
+            c64: ['#000000', '#FFFFFF', '#68372B', '#70A4B2', '#6F3D86', '#588D43', '#352879', '#B8C76F', '#6F4F25', '#433900', '#9A6759', '#444444', '#6C6C6C', '#9AD284', '#6C5EB5', '#959595'],
+            vaporwave: ['#FF71CE', '#01CDFE', '#05FFA1', '#B967FF', '#FFFB96'],
+            sunset: ['#004500', '#FF8C00', '#FFD700', '#FF69B4', '#8B00FF'],
+            apple2: ['#000000', '#00FF00'],
+            zxSpectrum: ['#000000', '#0000FF', '#FF0000', '#FF00FF', '#00FF00', '#00FFFF', '#FFFF00', '#FFFFFF'],
+            custom: customPalette
+        };
+
+        document.getElementById('upload-button').addEventListener('click', () => {
+            const fileElem = document.getElementById('fileElem');
+            if (fileElem) {
+                fileElem.click();
+            }
+        });
+
+        document.getElementById('fileElem').addEventListener('change', (event) => {
+            handleFiles(event.target.files);
+        });
+
+        document.querySelectorAll('input[name="dithering"]').forEach((element) => {
+            element.addEventListener('change', () => {
+                applyDither();
+            });
+        });
+
+        document.getElementById('invert').addEventListener('change', () => {
+            applyDither();
+        });
+
+        document.getElementById('blockiness').addEventListener('input', (event) => {
+            applyDither();
+        });
+
+        document.getElementById('brightness').addEventListener('input', (event) => {
+            applyDither();
+        });
+
+        document.getElementById('contrast').addEventListener('input', (event) => {
+            applyDither();
+        });
+
+        document.getElementById('gamma').addEventListener('input', (event) => {
+            applyDither();
+        });
+
+        document.querySelectorAll('.palette-button').forEach((button) => {
+            button.addEventListener('click', () => {
+                selectPalette(button.getAttribute('data-palette'));
+            });
+        });
+
+        document.getElementById('custom-palette-button').addEventListener('click', () => {
+            openCustomPaletteDialog();
+        });
+
+        zoomSlider.addEventListener('input', () => {
+            const zoomLevel = zoomSlider.value;
+            processedImageDiv.style.transform = `scale(${zoomLevel})`;
+            placeholderImage.style.transform = `scale(${zoomLevel})`;
+        });
+
+        function handleFiles(files) {
+            const file = files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedImage = new Image();
+                uploadedImage.onload = () => {
+                    applyDither();
+                    selectPalette('monochrome');
+                };
+                uploadedImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function selectPalette(paletteName) {
+            selectedPalette = palettes[paletteName].map(color => {
+                const hex = parseInt(color.slice(1), 16);
+                return {
+                    r: (hex >> 16) & 255,
+                    g: (hex >> 8) & 255,
+                    b: hex & 255
+                };
+            });
+            displayPalette();
+            applyDither();
+        }
+
+        function displayPalette() {
+            const paletteDisplay = document.getElementById('palette-display');
+            paletteDisplay.innerHTML = '';
+            selectedPalette.forEach(color => {
+                const colorDiv = document.createElement('div');
+                colorDiv.className = 'palette-color';
+                colorDiv.style.backgroundColor = `rgb(${color.r},${color.g},${color.b})`;
+                paletteDisplay.appendChild(colorDiv);
+            });
+        }
+
+        function applyDither() {
+            const blockiness = document.getElementById('blockiness').value;
+            const brightness = document.getElementById('brightness').value;
+            const contrast = document.getElementById('contrast').value;
+            const gamma = document.getElementById('gamma').value;
+            const invert = document.getElementById('invert').checked;
+            const ditheringMethod = document.querySelector('input[name="dithering"]:checked').value;
+            if (uploadedImage && selectedPalette.length) {
+                const processedImage = document.getElementById('processed-image');
+
+                
+                const randomCanvas = document.createElement('canvas');
+                const randomCtx = randomCanvas.getContext('2d');
+                randomCanvas.width = uploadedImage.width;
+                randomCanvas.height = uploadedImage.height;
+                randomCtx.drawImage(uploadedImage, 0, 0, uploadedImage.width, uploadedImage.height);
+                let randomImageData = randomCtx.getImageData(0, 0, randomCanvas.width, randomCanvas.height);
+                randomImageData = applyRandomDithering(randomImageData);
+                randomCtx.putImageData(randomImageData, 0, 0);
+                placeholderImage.innerHTML = `<img src="${randomCanvas.toDataURL()}" alt="Placeholder Image" style="max-width: 100%; max-height: 100%; width: auto; height: auto;">`;
+
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                let scale = 1 - blockiness / 10;
+
+                if (scale < 1) {
+                    canvas.width = Math.floor(uploadedImage.width * scale);
+                    canvas.height = Math.floor(uploadedImage.height * scale);
+                    if (canvas.width % 2 !== 0) canvas.width -= 1;
+                    if (canvas.height % 2 !== 0) canvas.height -= 1;
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
+                    let tempImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    tempImageData = adjustBrightnessAndContrast(tempImageData, brightness, contrast);
+                    tempImageData = applyGammaCorrection(tempImageData, gamma);
+                    if (invert) tempImageData = invertColors(tempImageData);
+                    const processedData = ditheringMethod === 'pc98' ? pc98Dithering(tempImageData, selectedPalette) : 
+                    ditheringMethod === 'newMethod' ? newDitheringMethod(tempImageData, selectedPalette) : 
+                    ditheringMethod === 'mildMethod' ? mildDitheringMethod(tempImageData, selectedPalette) : 
+                    ditheringMethod === 'glitch' ? glitchDithering(tempImageData, selectedPalette) : 
+                    orderedDithering(tempImageData, selectedPalette, ditheringMethod);
+                    ctx.putImageData(processedData, 0, 0);
+
+                    const resizedCanvas = document.createElement('canvas');
+                    const resizedCtx = resizedCanvas.getContext('2d');
+                    resizedCanvas.width = uploadedImage.width;
+                    resizedCanvas.height = uploadedImage.height;
+                    resizedCtx.imageSmoothingEnabled = false;
+                    resizedCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, resizedCanvas.width, resizedCanvas.height);
+                    processedImage.innerHTML = `<img src="${resizedCanvas.toDataURL()}" alt="Processed Image" style="max-width: 100%; max-height: 100%; width: auto; height: auto;">`;
+                } else {
+                    canvas.width = uploadedImage.width;
+                    canvas.height = uploadedImage.height;
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.drawImage(uploadedImage, 0, 0);
+                    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    imageData = adjustBrightnessAndContrast(imageData, brightness, contrast);
+                    imageData = applyGammaCorrection(imageData, gamma);
+                    if (invert) imageData = invertColors(imageData);
+                    const processedData = ditheringMethod === 'pc98' ? pc98Dithering(imageData, selectedPalette) : 
+                    ditheringMethod === 'newMethod' ? newDitheringMethod(imageData, selectedPalette) : 
+                    ditheringMethod === 'mildMethod' ? mildDitheringMethod(imageData, selectedPalette) : 
+                    ditheringMethod === 'glitch' ? glitchDithering(imageData, selectedPalette) : 
+                    orderedDithering(imageData, selectedPalette, ditheringMethod);
+                    ctx.putImageData(processedData, 0, 0);
+                    processedImage.innerHTML = `<img src="${canvas.toDataURL()}" alt="Processed Image" style="max-width: 100%; max-height: 100%; width: auto; height: auto;">`;
+                }
+
+                placeholderImage.style.opacity = 0;
+                processedImage.style.opacity = 1;
+            } else {
+                console.log('kein pic?');
+            }
+        }
+
+        function adjustBrightnessAndContrast(imageData, brightness, contrast) {
+            const data = imageData.data;
+            const brightnessFactor = parseFloat(brightness) / 100;
+            const contrastFactor = (259 * (parseFloat(contrast) + 255)) / (255 * (259 - parseFloat(contrast)));
+
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = truncate(contrastFactor * (data[i] - 128) + 128 + brightnessFactor * 255);
+                data[i + 1] = truncate(contrastFactor * (data[i + 1] - 128) + 128 + brightnessFactor * 255);
+                data[i + 2] = truncate(contrastFactor * (data[i + 2] - 128) + 128 + brightnessFactor * 255);
+            }
+
+            return imageData;
+        }
+
+        function applyGammaCorrection(imageData, gamma) {
+            const data = imageData.data;
+            const gammaCorrection = 1 / parseFloat(gamma);
+
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = 255 * Math.pow(data[i] / 255, gammaCorrection);
+                data[i + 1] = 255 * Math.pow(data[i + 1] / 255, gammaCorrection);
+                data[i + 2] = 255 * Math.pow(data[i + 2] / 255, gammaCorrection);
+            }
+
+            return imageData;
+        }
+
+        function truncate(value) {
+            return Math.min(255, Math.max(0, value));
+        }
+
+        function invertColors(imageData) {
+            const data = imageData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = 255 - data[i];
+                data[i + 1] = 255 - data[i + 1];
+                data[i + 2] = 255 - data[i + 2];
+            }
+
+            return imageData;
+        }
+
+        function orderedDithering(imageData, palette, bayerLevel) {
+            const width = imageData.width;
+            const height = imageData.height;
+            const data = imageData.data;
+
+            const bayerMatrices = [
+                [
+                    [0, 2],
+                    [3, 1]
+                ],
+                [
+                    [0, 2, 3, 1],
+                    [3, 1, 0, 2],
+                    [2, 3, 1, 0],
+                    [1, 0, 2, 3]
+                ],
+                [
+                    [0, 8, 2, 10, 3, 11, 1, 9],
+                    [12, 4, 14, 6, 15, 7, 13, 5],
+                    [3, 11, 1, 9, 0, 8, 2, 10],
+                    [15, 7, 13, 5, 12, 4, 14, 6],
+                    [0, 8, 2, 10, 3, 11, 1, 9],
+                    [12, 4, 14, 6, 15, 7, 13, 5],
+                    [3, 11, 1, 9, 0, 8, 2, 10],
+                    [15, 7, 13, 5, 12, 4, 14, 6]
+                ],
+                [
+                    [0, 32, 8, 40, 2, 34, 10, 42, 1, 33, 9, 41, 3, 35, 11, 43],
+                    [48, 16, 56, 24, 50, 18, 58, 26, 49, 17, 57, 25, 51, 19, 59, 27],
+                    [12, 44, 4, 36, 14, 46, 6, 38, 13, 45, 5, 37, 15, 47, 7, 39],
+                    [60, 28, 52, 20, 62, 30, 54, 22, 61, 29, 53, 21, 63, 31, 55, 23],
+                    [2, 34, 10, 42, 0, 32, 8, 40, 3, 35, 11, 43, 1, 33, 9, 41],
+                    [50, 18, 58, 26, 48, 16, 56, 24, 51, 19, 59, 27, 49, 17, 57, 25],
+                    [14, 46, 6, 38, 12, 44, 4, 36, 15, 47, 7, 39, 13, 45, 5, 37],
+                    [62, 30, 54, 22, 60, 28, 52, 20, 63, 31, 55, 23, 61, 29, 53, 21],
+                    [3, 35, 11, 43, 1, 33, 9, 41, 2, 34, 10, 42, 0, 32, 8, 40],
+                    [51, 19, 59, 27, 49, 17, 57, 25, 50, 18, 58, 26, 48, 16, 56, 24],
+                    [15, 47, 7, 39, 13, 45, 5, 37, 14, 46, 6, 38, 12, 44, 4, 36],
+                    [63, 31, 55, 23, 61, 29, 53, 21, 62, 30, 54, 22, 60, 28, 52, 20],
+                    [1, 33, 9, 41, 3, 35, 11, 43, 0, 32, 8, 40, 2, 34, 10, 42],
+                    [49, 17, 57, 25, 51, 19, 59, 27, 48, 16, 56, 24, 50, 18, 58, 26],
+                    [13, 45, 5, 37, 15, 47, 7, 39, 12, 44, 4, 36, 14, 46, 6, 38],
+                    [61, 29, 53, 21, 63, 31, 55, 23, 60, 28, 52, 20, 62, 30, 54, 22]
+                ]
+            ];
+
+            const bayerMatrix = bayerMatrices[bayerLevel];
+            const matrixSize = bayerMatrix.length;
+            const maxBayerValue = Math.max(...bayerMatrix.flat());
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const oldPixel = {
+                        r: data[index],
+                        g: data[index + 1],
+                        b: data[index + 2]
+                    };
+
+                    const threshold = bayerMatrix[y % matrixSize][x % matrixSize] / maxBayerValue * 255;
+
+                    const adjustedPixel = {
+                        r: Math.min(Math.max(oldPixel.r + threshold - 128, 0), 255),
+                        g: Math.min(Math.max(oldPixel.g + threshold - 128, 0), 255),
+                        b: Math.min(Math.max(oldPixel.b + threshold - 128, 0), 255)
+                    };
+
+                    const nearestColor = findNearestColor(adjustedPixel, palette);
+
+                    data[index] = nearestColor.r;
+                    data[index + 1] = nearestColor.g;
+                    data[index + 2] = nearestColor.b;
+                    data[index + 3] = 255;
+                }
+            }
+
+            return imageData;
+        }
+
+        function pc98Dithering(imageData, palette) {
+            const width = imageData.width;
+            const height = imageData.height;
+            const data = imageData.data;
+
+            const bayerMatrix = [
+                [0, 8, 2, 10, 3, 11, 1, 9],
+                [12, 4, 14, 6, 15, 7, 13, 5],
+                [3, 11, 1, 9, 0, 8, 2, 10],
+                [15, 7, 13, 5, 12, 4, 14, 6],
+                [0, 8, 2, 10, 3, 11, 1, 9],
+                [12, 4, 14, 6, 15, 7, 13, 5],
+                [3, 11, 1, 9, 0, 8, 2, 10],
+                [15, 7, 13, 5, 12, 4, 14, 6]
+            ];
+            const matrixSize = bayerMatrix.length;
+            const maxBayerValue = Math.max(...bayerMatrix.flat());
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const oldPixel = {
+                        r: data[index],
+                        g: data[index + 1],
+                        b: data[index + 2]
+                    };
+
+                    const threshold = bayerMatrix[(y * 2 + x) % matrixSize][x % matrixSize] / maxBayerValue * 255;
+
+                    const adjustedPixel = {
+                        r: Math.min(Math.max(oldPixel.r + threshold - 128, 0), 255),
+                        g: Math.min(Math.max(oldPixel.g + threshold - 128, 0), 255),
+                        b: Math.min(Math.max(oldPixel.b + threshold - 128, 0), 255)
+                    };
+
+                    const nearestColor = findNearestColor(adjustedPixel, palette);
+
+                    data[index] = nearestColor.r;
+                    data[index + 1] = nearestColor.g;
+                    data[index + 2] = nearestColor.b;
+                    data[index + 3] = 255;
+                }
+            }
+
+            return imageData;
+        }
+
+        function newDitheringMethod(imageData, palette) {
+            const width = imageData.width;
+            const height = imageData.height;
+            const data = imageData.data;
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const oldPixel = {
+                        r: data[index],
+                        g: data[index + 1],
+                        b: data[index + 2]
+                    };
+
+                    const threshold = ((x + y) % 2) * 255 / 2;
+
+                    const adjustedPixel = {
+                        r: Math.min(Math.max(oldPixel.r + threshold - 128, 0), 255),
+                        g: Math.min(Math.max(oldPixel.g + threshold - 128, 0), 255),
+                        b: Math.min(Math.max(oldPixel.b + threshold - 128, 0), 255)
+                    };
+
+                    const nearestColor = findNearestColor(adjustedPixel, palette);
+
+                    data[index] = nearestColor.r;
+                    data[index + 1] = nearestColor.g;
+                    data[index + 2] = nearestColor.b;
+                    data[index + 3] = 255;
+                }
+            }
+
+            return imageData;
+        }
+
+        function mildDitheringMethod(imageData, palette) {
+            const width = imageData.width;
+            const height = imageData.height;
+            const data = imageData.data;
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const oldPixel = {
+                        r: data[index],
+                        g: data[index + 1],
+                        b: data[index + 2]
+                    };
+
+                    const threshold = ((x + y) % 4) * 64;
+
+                    const adjustedPixel = {
+                        r: Math.min(Math.max(oldPixel.r + threshold - 128, 0), 255),
+                        g: Math.min(Math.max(oldPixel.g + threshold - 128, 0), 255),
+                        b: Math.min(Math.max(oldPixel.b + threshold - 128, 0), 255)
+                    };
+
+                    const nearestColor = findNearestColor(adjustedPixel, palette);
+
+                    data[index] = nearestColor.r;
+                    data[index + 1] = nearestColor.g;
+                    data[index + 2] = nearestColor.b;
+                    data[index + 3] = 255;
+                }
+            }
+
+            return imageData;
+        }
+
+        function glitchDithering(imageData, palette) {
+            const width = imageData.width;
+            const height = imageData.height;
+            const data = imageData.data;
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const oldPixel = {
+                        r: data[index],
+                        g: data[index + 1],
+                        b: data[index + 2]
+                    };
+
+                    const threshold = Math.random() * 255;
+
+                    const adjustedPixel = {
+                        r: Math.min(Math.max(oldPixel.r + threshold - 128, 0), 255),
+                        g: Math.min(Math.max(oldPixel.g + threshold - 128, 0), 255),
+                        b: Math.min(Math.max(oldPixel.b + threshold - 128, 0), 255)
+                    };
+
+                    const nearestColor = findNearestColor(adjustedPixel, palette);
+
+                    data[index] = nearestColor.r;
+                    data[index + 1] = nearestColor.g;
+                    data[index + 2] = nearestColor.b;
+                    data[index + 3] = 255;
+                }
+            }
+
+            return imageData;
+        }
+
+        function applyRandomDithering(imageData) {
+            const width = imageData.width;
+            const height = imageData.height;
+            const data = imageData.data;
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    const randomColor = Math.random() > 0.5 ? 0 : 255;
+                    data[index] = randomColor;
+                    data[index + 1] = randomColor;
+                    data[index + 2] = randomColor;
+                    data[index + 3] = 255; // Alpha-Kanal
+                }
+            }
+
+            return imageData;
+        }
+
+        function findNearestColor(pixel, palette) {
+            let nearestColor = palette[0];
+            let minDistance = Infinity;
+
+            for (const color of palette) {
+                const distance = Math.sqrt(
+                    Math.pow(pixel.r - color.r, 2) +
+                    Math.pow(pixel.g - color.g, 2) +
+                    Math.pow(pixel.b - color.b, 2)
+                );
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearestColor = color;
+                }
+            }
+
+            return nearestColor;
+        }
+
+        function downloadImage() {
+            const processedImage = document.querySelector('#processed-image img');
+            const link = document.createElement('a');
+            link.href = processedImage.src;
+            link.download = 'processed-image.png';
+            link.click();
+        }
+
+        function openCustomPaletteDialog() {
+            const dialog = document.createElement('div');
+            dialog.style.position = 'fixed';
+            dialog.style.top = '50%';
+            dialog.style.left = '50%';
+            dialog.style.transform = 'translate(-50%, -50%)';
+            dialog.style.backgroundColor = '#333';
+            dialog.style.border = '2px solid #555';
+            dialog.style.padding = '20px';
+            dialog.style.zIndex = '1000';
+
+            const paletteInputs = document.createElement('div');
+            paletteInputs.id = 'custom-palette-inputs';
+            for (let i = 0; i < 16; i++) {
+                const input = document.createElement('input');
+                input.type = 'color';
+                input.value = customPalette[i] || '#000000';
+                input.style.margin = '5px';
+                paletteInputs.appendChild(input);
+            }
+
+            const saveButton = document.createElement('button');
+            saveButton.textContent = 'Save';
+            saveButton.onclick = () => {
+                customPalette = [];
+                document.querySelectorAll('#custom-palette-inputs input').forEach(input => {
+                    customPalette.push(input.value);
+                });
+                palettes.custom = customPalette;
+                selectPalette('custom');
+                dialog.remove();
+            };
+
+            dialog.appendChild(paletteInputs);
+            dialog.appendChild(saveButton);
+            document.body.appendChild(dialog);
+        }
+
+        // Init mit monochrome
+        selectPalette('monochrome');
+    </script>
+</body>
+</html>
